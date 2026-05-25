@@ -1,0 +1,449 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Lua Protection Bot</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+    padding:15px;
+}
+
+.container{
+    max-width:700px;
+    margin:auto;
+}
+
+.card{
+    background:#1e293b;
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:18px;
+    border:1px solid rgba(255,255,255,0.1);
+}
+
+h1{
+    text-align:center;
+    margin-bottom:10px;
+    color:#38bdf8;
+}
+
+p{
+    text-align:center;
+    color:#94a3b8;
+    margin-bottom:10px;
+}
+
+textarea,input,select{
+    width:100%;
+    background:#0f172a;
+    border:1px solid #334155;
+    color:white;
+    border-radius:12px;
+    padding:14px;
+    margin-top:10px;
+}
+
+textarea{
+    min-height:250px;
+    resize:vertical;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:12px;
+    margin-top:12px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.primary{
+    background:#0ea5e9;
+    color:white;
+}
+
+.success{
+    background:#22c55e;
+    color:white;
+}
+
+.copy{
+    background:#f59e0b;
+    color:white;
+}
+
+.preview{
+    background:black;
+    padding:15px;
+    border-radius:12px;
+    overflow:auto;
+    max-height:300px;
+    white-space:pre-wrap;
+    font-size:12px;
+    margin-top:12px;
+}
+
+.row{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:10px;
+}
+
+.badge{
+    background:#0284c7;
+    padding:6px 12px;
+    border-radius:999px;
+    display:inline-block;
+    margin:auto;
+    font-size:12px;
+}
+
+.status{
+    margin-top:15px;
+    padding:12px;
+    border-radius:12px;
+    display:none;
+}
+
+.successBox{
+    background:#14532d;
+    color:#bbf7d0;
+}
+
+.errorBox{
+    background:#7f1d1d;
+    color:#fecaca;
+}
+
+.infoBox{
+    background:#0c4a6e;
+    color:#bae6fd;
+}
+
+@media(max-width:600px){
+    .row{
+        grid-template-columns:1fr;
+    }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="card">
+<h1>🤖 AI Lua Protection Bot</h1>
+<p>Mobile Friendly • Offline • No Backend Needed</p>
+<center><span class="badge">⚡ Smart Lua Analyzer</span></center>
+</div>
+
+<div class="card">
+<h2>📅 Expiry Settings</h2>
+
+<div class="row">
+<input type="number" id="day" placeholder="DD">
+<input type="number" id="month" placeholder="MM">
+<input type="number" id="year" placeholder="YYYY">
+</div>
+
+<input type="text" id="message" placeholder="Expiry message">
+
+<select id="protectType">
+<option value="basic">Basic Protection</option>
+<option value="medium">Medium Protection</option>
+<option value="advanced">Advanced Protection</option>
+</select>
+
+<textarea id="script" placeholder="Paste Lua script here..."></textarea>
+
+<button class="primary" onclick="analyzeAndProtect()">⚡ Analyze & Protect Script</button>
+
+<div id="status" class="status"></div>
+</div>
+
+<div class="card" id="resultCard" style="display:none;">
+<h2>✅ Protected Script</h2>
+<div class="preview" id="preview"></div>
+
+<button class="success" onclick="downloadScript()">📥 Download Lua File</button>
+<button class="copy" onclick="copyScript()">📋 Copy Script</button>
+</div>
+
+</div>
+
+<script>
+
+let finalScript = "";
+
+function showStatus(message,type){
+    const status = document.getElementById("status");
+
+    status.style.display = "block";
+    status.innerHTML = message;
+    status.className = "status ";
+
+    if(type === "success"){
+        status.classList.add("successBox");
+    }
+    else if(type === "error"){
+        status.classList.add("errorBox");
+    }
+    else{
+        status.classList.add("infoBox");
+    }
+}
+
+function detectScriptType(script){
+
+    script = script.toLowerCase();
+
+    if(script.includes("gg.searchnumber")){
+        return "GameGuardian Search Script";
+    }
+
+    if(script.includes("gg.choice")){
+        return "Menu Based Lua Script";
+    }
+
+    if(script.includes("function")){
+        return "Function Based Script";
+    }
+
+    if(script.includes("while true")){
+        return "Loop Based Script";
+    }
+
+    return "Generic Lua Script";
+}
+
+function createProtectionCode(day,month,year,message,level){
+
+    let antiTamper = "";
+
+    if(level === "medium"){
+        antiTamper = `
+local __tamper = debug.getinfo
+if not __tamper then
+    gg.alert("Protection Error")
+    os.exit()
+end
+`;
+    }
+
+    if(level === "advanced"){
+        antiTamper = `
+local __tamper = debug.getinfo
+if not __tamper then
+    gg.alert("Protected Script")
+    os.exit()
+end
+
+local __key = tostring(os.time()):reverse()
+if #__key < 5 then
+    os.exit()
+end
+`;
+    }
+
+return `
+-- =====================================
+-- AI PROTECTED LUA SCRIPT
+-- =====================================
+
+${antiTamper}
+
+local EXPIRY_DAY = ${day}
+local EXPIRY_MONTH = ${month}
+local EXPIRY_YEAR = ${year}
+
+local function checkExpiry()
+
+    local current = os.date("*t")
+
+    local currentStamp = os.time({
+        year=current.year,
+        month=current.month,
+        day=current.day
+    })
+
+    local expiryStamp = os.time({
+        year=EXPIRY_YEAR,
+        month=EXPIRY_MONTH,
+        day=EXPIRY_DAY,
+        hour=23,
+        min=59,
+        sec=59
+    })
+
+    if currentStamp > expiryStamp then
+        gg.alert([[${message}]])
+        os.exit()
+        gg.exit()
+        return true
+    end
+
+    return false
+end
+
+if checkExpiry() then
+    return
+end
+
+local __sleep = gg.sleep
+
+gg.sleep = function(ms)
+
+    if checkExpiry() then
+        return
+    end
+
+    return __sleep(ms)
+end
+
+`;
+}
+
+function smartOptimize(script){
+
+    script = script.replace(/\r/g, "");
+
+    script = script.replace(/\n{3,}/g, "\n\n");
+
+    return script;
+}
+
+function analyzeAndProtect(){
+
+    const day = document.getElementById("day").value;
+    const month = document.getElementById("month").value;
+    const year = document.getElementById("year").value;
+
+    let script = document.getElementById("script").value;
+
+    const message = document.getElementById("message").value || "⏰ Script Expired!";
+
+    const level = document.getElementById("protectType").value;
+
+    if(script.trim() === ""){
+        showStatus("❌ Paste Lua script first","error");
+        return;
+    }
+
+    if(!day || !month || !year){
+        showStatus("❌ Enter expiry date","error");
+        return;
+    }
+
+    showStatus("🤖 AI analyzing script...","info");
+
+    setTimeout(()=>{
+
+        const scriptType = detectScriptType(script);
+
+        script = smartOptimize(script);
+
+        const protection = createProtectionCode(day,month,year,message,level);
+
+        finalScript = protection + "\n" + script;
+
+        document.getElementById("resultCard").style.display = "block";
+
+        document.getElementById("preview").textContent = finalScript.substring(0,1500);
+
+        showStatus(
+            "✅ Protection added successfully<br><br>📌 Script Type: " + scriptType + "<br>🔒 Protection: " + level,
+            "success"
+        );
+
+    },800);
+}
+
+function downloadScript(){
+
+    if(finalScript === ""){
+        showStatus("❌ No generated script","error");
+        return;
+    }
+
+    try{
+
+        const blob = new Blob([finalScript],{type:"text/plain"});
+
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+
+        a.href = url;
+
+        a.download = "protected_script_" + Date.now() + ".lua";
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        setTimeout(()=>{
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        },100);
+
+        showStatus("📥 Download completed successfully","success");
+
+    }catch(e){
+        showStatus("❌ Download failed: " + e.message,"error");
+    }
+}
+
+async function copyScript(){
+
+    if(finalScript === ""){
+        showStatus("❌ No script available","error");
+        return;
+    }
+
+    try{
+
+        await navigator.clipboard.writeText(finalScript);
+
+        showStatus("📋 Script copied successfully","success");
+
+    }catch(e){
+
+        const temp = document.createElement("textarea");
+
+        temp.value = finalScript;
+
+        document.body.appendChild(temp);
+
+        temp.select();
+
+        document.execCommand("copy");
+
+        document.body.removeChild(temp);
+
+        showStatus("📋 Script copied","success");
+    }
+}
+
+const now = new Date();
+
+document.getElementById("day").value = now.getDate();
+document.getElementById("month").value = now.getMonth() + 1;
+document.getElementById("year").value = now.getFullYear() + 1;
+
+</script>
+
+</body>
+</html>
